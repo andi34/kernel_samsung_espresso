@@ -5,6 +5,7 @@
 #
 
 OBJS		=
+plus_sec := $(call as-instr,.arch_extension sec,+sec)
 
 # Ensure that mmcif loader code appears early in the image
 # to minimise that number of bocks that have to be read in
@@ -19,6 +20,10 @@ AFLAGS_head.o += -DTEXT_OFFSET=$(TEXT_OFFSET)
 HEAD	= head.o
 OBJS	+= misc.o decompress.o
 FONTC	= $(srctree)/drivers/video/console/font_acorn_8x8.c
+
+AFLAGS_head.o += -Wa,-march=armv7-a$(plus_sec)
+AFLAGS_misc.o += -Wa,-march=armv7-a$(plus_sec)
+AFLAGS_decompress.o += -Wa,-march=armv7-a$(plus_sec)
 
 #
 # Architecture dependencies
@@ -120,6 +125,8 @@ lib1funcs = $(obj)/lib1funcs.o
 $(obj)/lib1funcs.S: $(srctree)/arch/$(SRCARCH)/lib/lib1funcs.S FORCE
 	$(call cmd,shipped)
 
+AFLAGS_lib1funcs.o += -Wa,-march=armv7-a$(plus_sec)
+
 # We need to prevent any GOTOFF relocs being used with references
 # to symbols in the .bss section since we cannot relocate them
 # independently from the rest at run time.  This can be achieved by
@@ -142,6 +149,8 @@ $(obj)/piggy.$(suffix_y): $(obj)/../Image FORCE
 	$(call if_changed,$(suffix_y))
 
 $(obj)/piggy.$(suffix_y).o:  $(obj)/piggy.$(suffix_y) FORCE
+
+AFLAGS_piggy.$(suffix_y).o += -Wa,-march=armv7-a$(plus_sec)
 
 CFLAGS_font.o := -Dstatic=
 
