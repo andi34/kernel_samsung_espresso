@@ -1,0 +1,90 @@
+##########################################
+# Building kernel
+#
+# by ketut.kumajaya @ XDA
+#
+# Source of this Tutorial can be found on XDA
+# http://forum.xda-developers.com/showthread.php?t=1859227
+#
+
+# 1. Download Sourcery G++ Lite 2010q1-202 for ARM GNU/Linux from (direct link)
+https://sourcery.mentor.com/GNUToolchain/package6488/public/arm-none-linux-gnueabi/arm-2010q1-202-arm-none-linux-gnueabi-i686-pc-linux-gnu.tar.bz2
+and save it in $HOME/android directory, extract it to /opt/toolchains/
+
+$ sudo mkdir -p /opt/toolchains/
+$ cd /opt/toolchains/
+$ sudo tar -xjvf $HOME/android/arm-2010q1-202-arm-none-linux-gnueabi-i686-pc-linux-gnu.tar.bz2
+
+
+# 2. Add /opt/toolchains/arm-2010q1/bin as your search PATH. Logout and back login to your desktop to activate your new search PATH
+
+$ echo $'\nPATH=\"/opt/toolchains/arm-2010q1/bin:$PATH\"' >> $HOME/.profile
+
+
+# 3. Clone 3.0.31 kernel source for JB P3100 from https://github.com/andi34/kernel_samsung_espresso
+
+$ mkdir -p $HOME/android/espresso/kernel
+$ cd $HOME/android/espresso/
+$ git clone https://github.com/andi34/kernel_samsung_espresso.git kernel
+$ cd kernel
+$ git checkout p3100jbupdate2
+$ make mrproper
+$ make ARCH=arm android_espresso10_omap4430_r02_user_defconfig
+
+
+# 4. If you want to change kernel config, download libncurses5-dev 
+
+$ sudo apt-get install libncurses5-dev
+$ make ARCH=arm menuconfig
+
+
+#5. Build the kernel
+
+$ make -j4 ARCH=arm
+
+
+# 6. Save kernel and modules
+
+$ mkdir ../espresso-kernel
+$ cp arch/arm/boot/zImage ../espresso-kernel
+$ find . -type f -name *.ko -exec cp {} ../espresso-kernel \;
+
+
+##########################################
+# Building PowerVR SGX 540 kernel modules
+
+# 1. Download the sources
+
+$ sudo apt-get install git-core
+$ git clone git://git.omapzoom.org/repo/graphics/omaplfb.git -b omaplfb-1.9 --depth 1
+$ git clone git://git.omapzoom.org/device/ti/proprietary-open.git -b d-jb-mr1-release --depth 1
+
+
+#2. Build pvrsrvkm kernel module
+
+$ tar -xvzf proprietary-open/omap4/sgx_src/eurasia_km.tgz
+$ rm -rf eurasia_km/eurasiacon/binary*
+$ export KERNELDIR=$HOME/android/espresso/kernel
+$ cd eurasia_km/eurasiacon/build/linux2/omap4430_android/
+$ make ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabi- TARGET_PRODUCT="blaze_tablet" BUILD=release TARGET_SGX=540 PLATFORM_VERSION=4.0
+$ cp ../../../binary2_540_120_omap4430_android_release/target/pvrsrvkm_sgx540_120.ko ../../../../../espresso-kernel/
+
+
+# 3. Build omaplfb kernel module
+
+cd ../../../../../omaplfb/omaplfb_linux
+export TARGET=omap4460
+export PVRKMDIR=$HOME/android/espresso/
+make clean
+make
+cp omaplfb_sgx540_120.ko ../../espresso-kernel/
+cd ../../
+
+
+# 4. Strip all kernel modules if needed
+
+$ arm-none-linux-gnueabi-strip --strip-unneeded espresso-kernel/*.ko
+
+Credits:
+Linux, Google, Samsung, omapzoom.org, gokhanmoral, codeworkx, cmenard
+
