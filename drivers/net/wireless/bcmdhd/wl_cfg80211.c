@@ -2452,11 +2452,7 @@ wl_cfg80211_join_ibss(struct wiphy *wiphy, struct net_device *dev,
 	s32 err = 0;
 	bool rollback_lock = false;
 
-#ifdef CONFIG_MACH_KONA
-	WL_ERR(("In\n"));
-#else
 	WL_TRACE(("In\n"));
-#endif
 
 	CHECK_SYS_UP(wl);
 	if (params->bssid) {
@@ -2483,17 +2479,11 @@ wl_cfg80211_join_ibss(struct wiphy *wiphy, struct net_device *dev,
 		}
 
 		/* wait 4 secons till scan done.... */
-#ifdef CONFIG_MACH_KONA
-		WL_ERR(("wait 4 secons till scan done\n"));
-#endif
 		schedule_timeout_interruptible(msecs_to_jiffies(4000));
 		if (rollback_lock)
 			rtnl_lock();
 		bss = cfg80211_get_ibss(wiphy, NULL,
 			params->ssid, params->ssid_len);
-#ifdef CONFIG_MACH_KONA
-		WL_ERR(("after cfg80211_get_ibss\n"));
-#endif
 	}
 	if (bss) {
 		wl->ibss_starter = false;
